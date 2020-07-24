@@ -1,9 +1,3 @@
-# NO LONGER MAINTAINED
-This repo is no longer maintained. Several contributors have forked it and are continuing development and SDK updates.
-
- * https://github.com/douglascrp/alfresco-cloud-store
- * https://github.com/Redpill-Linpro/alfresco-s3-adapter
-
 # alfresco-s3-adapter
 Alfresco AMP Module for S3 Backed Storage
 
