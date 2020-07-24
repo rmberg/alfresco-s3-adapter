@@ -63,6 +63,12 @@
         <dependency>
             <groupId>${alfresco.groupId}</groupId>
             <artifactId>alfresco-repository</artifactId>
+            <exclusions>
+                <exclusion> <!-- exclude facebook social since its dropped from the repo -->
+                    <groupId>org.springframework.social</groupId>
+                    <artifactId>spring-social-facebook</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- aws sdk -->
