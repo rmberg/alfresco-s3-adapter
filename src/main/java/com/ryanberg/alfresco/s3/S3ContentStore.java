@@ -2,11 +2,15 @@ package com.ryanberg.alfresco.s3;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import org.alfresco.repo.content.AbstractContentStore;
 import org.alfresco.repo.content.ContentStore;
@@ -48,6 +52,7 @@ public class S3ContentStore extends AbstractContentStore
     private String bucketName;
     private String regionName;
     private String rootDirectory;
+    private String url;
 
     @Override
     public boolean isWriteSupported() {
@@ -80,9 +85,22 @@ public class S3ContentStore extends AbstractContentStore
             }
         }
 
-        s3Client = new AmazonS3Client(credentials);
-        Region region = Region.getRegion(Regions.fromName(this.regionName));
-        s3Client.setRegion(region);
+        if(StringUtils.isNotBlank(this.url)){
+            logger.debug("Found endpoint URL in properties file");
+        } else {
+            logger.error("No endpoint found, cannot initalize S3 client");
+        }
+
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setSignerOverride("AWSS3V4SignerType"); 
+
+        s3Client = AmazonS3ClientBuilder
+                      .standard()
+                      .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(this.url,this.regionName))
+                     .withPathStyleAccessEnabled(true)
+                     .withClientConfiguration(clientConfiguration)
+                     .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                     .build(); 
         transferManager = new TransferManager(s3Client);
     }
 
@@ -111,6 +129,10 @@ public class S3ContentStore extends AbstractContentStore
         }
 
         this.rootDirectory = dir;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     @Override

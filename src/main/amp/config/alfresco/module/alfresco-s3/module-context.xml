@@ -34,6 +34,7 @@
 		<property name="bucketName" value="${aws.s3.bucketName}"/>
 		<property name="regionName" value="${aws.regionName}"/>
 		<property name="rootDirectory" value="${dir.contentstore.deleted}"/>
+                <property name="url" value="${aws.s3.url}"/>
 	</bean>
 
 	<bean id="contentCache" class="org.alfresco.repo.content.caching.ContentCacheImpl">
@@ -55,15 +56,13 @@
 		<property name="cleaner" ref="cachedContentCleaner"/>
 	</bean>
 
-	<bean id="cachingContentStoreCleanerJobDetail" class="org.springframework.scheduling.quartz.JobDetailBean">
+	<bean id="cachingContentStoreCleanerJobDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
 		<property name="jobClass">
 			<value>org.alfresco.repo.content.caching.cleanup.CachedContentCleanupJob</value>
 		</property>
 		<property name="jobDataAsMap">
 			<map>
-				<entry key="cachedContentCleaner">
-					<ref bean="cachedContentCleaner" />
-				</entry>
+				<entry key="cachedContentCleaner" value-ref="cachedContentCleaner"/>
 			</map>
 		</property>
 	</bean>
@@ -77,17 +76,21 @@
 		<property name="usageTracker" ref="standardQuotaManager"/>
 	</bean>
 
-	<bean id="cachingContentStoreCleanerTrigger" class="org.alfresco.util.CronTriggerBean">
-		<property name="jobDetail">
-			<ref bean="cachingContentStoreCleanerJobDetail" />
-		</property>
-		<property name="scheduler">
-			<ref bean="schedulerFactory" />
-		</property>
-		<property name="cronExpression">
-			<value>${system.content.caching.contentCleanup.cronExpression}</value>
-		</property>
-	</bean>
+        <bean id="cachingContentStoreCleanerSchedulerAccessor" class="org.alfresco.schedule.AlfrescoSchedulerAccessorBean">
+        	<property name="scheduler" ref="schedulerFactory"/>
+        	<property name="triggers">
+            		<list>
+				<bean id="cachingContentStoreCleanerTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+                			<property name="jobDetail">
+                        		<ref bean="cachingContentStoreCleanerJobDetail" />
+                			</property>
+                			<property name="cronExpression">
+                        		<value>${system.content.caching.contentCleanup.cronExpression}</value>
+                			</property>
+        			</bean>
+            		</list>
+        	</property>
+    	</bean>
 
 	<bean id="com.ryanberg.alfresco.s3.S3ContentStore" class="com.ryanberg.alfresco.s3.S3ContentStore" init-method="init">
 		<property name="accessKey" value="${aws.accessKey}"/>
@@ -95,6 +98,7 @@
 		<property name="bucketName" value="${aws.s3.bucketName}"/>
 		<property name="regionName" value="${aws.regionName}"/>
 		<property name="rootDirectory" value="${dir.contentstore}"/>
+                <property name="url" value="${aws.s3.url}"/>
 	</bean>
 
 </beans>
